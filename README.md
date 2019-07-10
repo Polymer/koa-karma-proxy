@@ -49,8 +49,7 @@ You don't have to use `koa-karma-proxy` as an executable from the command-line. 
 
 ```ts
 const Koa = require('koa');
-const mount from 'koa-mount';
-
+const mount = require('koa-mount');
 const {join} = require('path');
 const {karmaProxy} = require('koa-karma-proxy');
 const {nodeResolve} = require('koa-node-resolve');
