@@ -1,6 +1,6 @@
 # koa-karma-proxy
 
-Simplified coordination of [karma]([https://karma-runner.github.io](https://karma-runner.github.io/) and upstream proxy server using the [koa](https://koajs.com) web framework.
+Simplified coordination of [karma](https://karma-runner.github.io/) and upstream proxy server using the [koa](https://koajs.com) web framework.
 
 ## Overview
 
@@ -39,3 +39,24 @@ This will:
 3. start karma.  (identical to `karma start`)
 4. wait for karma to confirm the port it is listening on.
 5. configure the proxy middleware to start directing requests to karma.
+
+## Advanced Usage
+
+You don't have to use `koa-karma-proxy` as an executable from the command-line.  It exposes everything you need to leverage within your own code.
+
+Here's an example, in `TypeScript`:
+
+```ts
+const Koa = require('koa');
+import {join} from 'path';
+import {karmaProxy} from 'koa-karma-proxy';
+import {myMiddleware} from './my-middleware';
+
+karmaProxy.start((karma) => new Koa()
+    .use(myMiddleware)
+    .use(karma), {
+      // Karma config options
+      configFile: join(__dirname, '../karma.conf.js'),
+      singleRun: true
+    });
+```
