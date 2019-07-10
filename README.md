@@ -18,12 +18,15 @@ First, you'll need to install it, most likely as a `devDependency` of your `npm`
 $ npm install --save-dev koa-karma-proxy
 ```
 
-Create a file called `karma.proxy.js` and export a function that returns a Koa app, which will define your proxy server.  Be sure to slot in the provided proxy to karma, which is the single given parameter, named `"karma"` in the example below:
+Create a file called `karma.proxy.js` and export a function that returns a Koa app, which will define your proxy server.  Be sure to slot in the provided proxy to karma, which is the single given parameter, named `"karma"` in the example below.  In this example, we'll use the [`koa-node-resolve`](https://github.com/Polymer/koa-node-resolve) package to translate node bare module specifiers to relative paths on-the-fly.  Please note that we mount the `nodeResolve` middleware specifically to the `/base` sub-path, since that is where `karma` serves our test, source and `node_modules` files from:
 
 ```js
 const Koa = require('koa');
-const myMiddleware = require('./my-middleware.js');
-module.exports = (karma) => new Koa().use(myMiddleware).use(karma);
+const mount = require('koa-mount');
+const {nodeResolve} = require('koa-node-resolve');
+module.exports = (karma) => new Koa()
+    .use(mount('/base', nodeResolve())
+    .use(karma);
 ```
 
 Use the `koa-karma-proxy` wrapper exactly as you'd use `karma` executable:
@@ -42,18 +45,18 @@ This will:
 
 ## Advanced Usage
 
-You don't have to use `koa-karma-proxy` as an executable from the command-line.  It exposes everything you need to leverage within your own code.
-
-Here's an example, in `TypeScript`:
+You don't have to use `koa-karma-proxy` as an executable from the command-line.  It exposes everything you need to leverage within your own code:
 
 ```ts
 const Koa = require('koa');
-import {join} from 'path';
-import {karmaProxy} from 'koa-karma-proxy';
-import {myMiddleware} from './my-middleware';
+const mount from 'koa-mount';
+
+const {join} = require('path');
+const {karmaProxy} = require('koa-karma-proxy');
+const {nodeResolve} = require('koa-node-resolve');
 
 karmaProxy.start((karma) => new Koa()
-    .use(myMiddleware)
+    .use(mount('/base', nodeResolve())
     .use(karma), {
       // Karma config options
       configFile: join(__dirname, '../karma.conf.js'),
