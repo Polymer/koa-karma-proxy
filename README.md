@@ -18,7 +18,15 @@ First, you'll need to install it, most likely as a `devDependency` of your `npm`
 $ npm install --save-dev koa-karma-proxy
 ```
 
-Create a file called `karma.proxy.js` and export a function that returns a Koa app, which will define your proxy server.  Be sure to slot in the provided proxy to karma, which is the single given parameter, named `"karma"` in the example below.  In this example, we'll use the [`koa-node-resolve`](https://github.com/Polymer/koa-node-resolve) package to translate node bare module specifiers to relative paths on-the-fly.  Please note that we mount the `nodeResolve` middleware specifically to the `/base` sub-path, since that is where `karma` serves our test, source and `node_modules` files from:
+Create a file called `karma.proxy.js` and export a function that returns a Koa app, which will define your proxy server. Be sure to slot in the provided proxy to karma, which is the single given parameter, named "karma" in the example below:
+
+```js
+const Koa = require('koa');
+const someMiddleaware = require('./some-middleware.js');
+module.exports = (karma) => new Koa().use(someMiddleware).use(karma);
+```
+
+In the following example, we'll use the [`koa-node-resolve`](https://github.com/Polymer/koa-node-resolve) package to translate node bare module specifiers to relative paths on-the-fly. Please note that we mount the nodeResolve middleware specifically to the `/base` sub-path, since that is where karma serves our test, source and `node_modules` files from:
 
 ```js
 const Koa = require('koa');
