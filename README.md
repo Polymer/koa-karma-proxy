@@ -59,10 +59,10 @@ You don't have to use `koa-karma-proxy` as an executable from the command-line. 
 const Koa = require('koa');
 const mount = require('koa-mount');
 const {join} = require('path');
-const {karmaProxy} = require('koa-karma-proxy');
+const {start} = require('koa-karma-proxy');
 const {nodeResolve} = require('koa-node-resolve');
 
-karmaProxy.start((karma) => new Koa()
+start((karma) => new Koa()
     .use(mount('/base', nodeResolve())
     .use(karma), {
       // Karma config options
