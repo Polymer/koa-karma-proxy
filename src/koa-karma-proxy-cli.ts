@@ -10,4 +10,8 @@ const config: karma.ConfigOptions = process();
 const karmaProxyConfigFile = resolve('./karma.proxy.js');
 const upsFactory = require(karmaProxyConfigFile);
 
-start(upsFactory, {karmaConfig : config});
+(async () => {
+  const servers = await start(upsFactory, {karmaConfig: config});
+  console.log(`Upstream Proxy listening on ${
+      servers.upstreamProxyPort} and Karma listening on ${servers.karmaPort}`);
+})();
