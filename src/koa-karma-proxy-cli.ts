@@ -8,6 +8,7 @@ const config: karma.ConfigOptions = process();
 // This may not be the right way to achieve this...  Need to fiddle to get this
 // right.
 const karmaProxyConfigFile = resolve('./karma.proxy.js');
+console.log(karmaProxyConfigFile);
 const upsFactory = require(karmaProxyConfigFile);
 
 (async () => {
