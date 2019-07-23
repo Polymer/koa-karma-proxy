@@ -42,7 +42,6 @@
     "karma-jasmine": "^2.0.1",
     "koa": "^2.7.0",
     "koa-mount": "^4.0.0",
-    "koa-proxy": "^1.0.0-alpha.2",
     "koa-static": "^5.0.0",
     "rimraf": "^2.6.3",
     "source-map-support": "^0.5.12",
@@ -54,6 +53,7 @@
   },
   "dependencies": {
     "karma": "^4.1.0",
+    "koa-proxy": "^1.0.0-alpha.3",
     "portfinder": "^1.0.20"
   }
 }
