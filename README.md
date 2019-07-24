@@ -37,10 +37,10 @@ module.exports = (karma) => new Koa()
     .use(karma);
 ```
 
-Use the `koa-karma-proxy` wrapper exactly as you'd use `karma` executable:
+Use the `karma-proxy` wrapper script exactly as you'd use `karma` executable:
 
 ```sh
-$ npx koa-karma-proxy start
+$ npx karma-proxy start
 ```
 
 This will:

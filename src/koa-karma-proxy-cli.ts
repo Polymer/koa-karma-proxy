@@ -2,17 +2,40 @@ import {start} from './koa-karma-proxy';
 import karma = require('karma');
 import {resolve} from 'path';
 
-const {process} = require('karma/lib/cli');
-const config: karma.ConfigOptions = process();
+console.log('koa-karma-proxy wrapper');
+let a = 0;
+let karmaProxyConfigFile = './karma.proxy.js';
+while (a < process.argv.length) {
+  if (process.argv[a] === '--proxyFile') {
+    karmaProxyConfigFile = process.argv[a + 1];
+    process.argv.splice(a, 2);
+    break;
+  }
+  if (process.argv[a].startsWith('--proxyFile=')) {
+    karmaProxyConfigFile = process.argv[a].split('=').slice(1).join('=');
+    process.argv.splice(a, 1);
+    break;
+  }
+  ++a;
+}
+
+const {process : processKarmaArgs} = require('karma/lib/cli');
+const karmaConfig: karma.ConfigOptions = processKarmaArgs();
 
 // This may not be the right way to achieve this...  Need to fiddle to get this
 // right.
-const karmaProxyConfigFile = resolve('./karma.proxy.js');
-console.log(karmaProxyConfigFile);
-const upsFactory = require(karmaProxyConfigFile);
+karmaProxyConfigFile = resolve(karmaProxyConfigFile);
+let upsFactory;
+try {
+  upsFactory = require(karmaProxyConfigFile);
+} catch (e) {
+  console.error(
+      `Unable to load proxy server config file "${karmaProxyConfigFile}"`);
+  process.exit(1);
+}
 
 (async () => {
-  const servers = await start(upsFactory, {karmaConfig: config});
-  console.log(`Upstream Proxy listening on ${
-      servers.upstreamProxyPort} and Karma listening on ${servers.karmaPort}`);
+  const {upstreamProxyPort} = await start(upsFactory, {karmaConfig});
+  console.log(`[karma-proxy] Upstream Proxy Server started at ` +
+              `http://0.0.0.0:${upstreamProxyPort}/`);
 })();

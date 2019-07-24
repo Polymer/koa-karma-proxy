@@ -56,7 +56,7 @@ export const start = (upsFactory: UpstreamProxyServerFactory,
   const karmaConfigFile: ConfigFile = karmaConfig as ConfigFile;
   if (karmaConfigFile.configFile) {
     const {configFile} = karmaConfigFile;
-    delete karmaConfigFile.configFile;
+    // delete karmaConfigFile.configFile;
     const configSetter = karma.config.parseConfig(configFile, karmaConfig);
     configSetter.set(karmaConfig);
   }
