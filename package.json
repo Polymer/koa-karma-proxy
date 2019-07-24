@@ -17,9 +17,10 @@
     "depcheck": "depcheck --ignore-dirs=lib --ignores=\"jasmine-core,karma-jasmine,karma-tap,karma-chrome-launcher,koa,rimraf,source-map-support,@types/*\"",
     "format": "find src -name \"*.ts\" | xargs clang-format --style=file -i",
     "lint": "tslint -p . --fix",
-    "test": "npm run test:raw --silent | tap-diff",
-    "test:raw": "tape -r source-map-support/register 'lib/test/*.test.js' 'lib/test/**/*.test.js'",
-    "test:browser": "node lib/koa-karma-proxy-cli.js run --proxyFile ./test/karma.proxy.js ./test/karma.conf.js --single-run --browsers Chrome"
+    "test:browser": "node lib/koa-karma-proxy-cli.js run --proxyFile ./test/karma.proxy.js ./test/karma.conf.js --single-run --browsers Chrome",
+    "test:unit": "npm run test:unit:raw --silent | tap-diff",
+    "test:unit:raw": "tape -r source-map-support/register 'lib/test/*.test.js' 'lib/test/**/*.test.js'",
+    "test": "npm run test:unit"
   },
   "repository": {
     "type": "git",
