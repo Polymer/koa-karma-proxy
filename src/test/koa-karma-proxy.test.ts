@@ -1,10 +1,22 @@
+/**
+ * @license
+ * Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+
 import {stopper} from 'karma';
 import * as path from 'path';
 import request from 'supertest';
 import test from 'tape';
-
 import Koa = require('koa');
-
 import {start} from '../koa-karma-proxy';
 
 const testMiddleware: Koa.Middleware =
@@ -17,9 +29,9 @@ test('starts a proxy server and karma server and it works', async (t) => {
   t.plan(1);
   const {karmaPort, upstreamProxyServer} = await start(
       (karma: Koa.Middleware) => new Koa().use(testMiddleware).use(karma), {
-        karmaConfig : {
-          basePath : path.join(__dirname, '../..'),
-          files : [ {pattern : 'lib/**/*.js', included : false} ]
+        karmaConfig: {
+          basePath: path.join(__dirname, '../..'),
+          files: [{pattern: 'lib/**/*.js', included: false}]
         }
       });
 
@@ -27,9 +39,10 @@ test('starts a proxy server and karma server and it works', async (t) => {
                             .get('/base/lib/test/koa-karma-proxy.test.js'))
                            .text;
 
-  stopper.stop({port : karmaPort}, () => {
+  stopper.stop({port: karmaPort}, () => {
     upstreamProxyServer.close();
-    t.assert(responseText.trim().endsWith('// :)'),
-             `Response text should contain the appended content`);
+    t.assert(
+        responseText.trim().endsWith('// :)'),
+        `Response text should contain the appended content`);
   });
 });
