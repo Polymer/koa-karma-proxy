@@ -12,7 +12,7 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-import {start} from './koa-karma-proxy';
+import {start} from './karma-proxy';
 import karma = require('karma');
 import {resolve} from 'path';
 

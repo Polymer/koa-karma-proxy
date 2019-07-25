@@ -17,7 +17,7 @@ import * as path from 'path';
 import request from 'supertest';
 import test from 'tape';
 import Koa = require('koa');
-import {start} from '../koa-karma-proxy';
+import {start} from '../karma-proxy';
 
 const testMiddleware: Koa.Middleware =
     async (ctx: Koa.Context, next: Function) => {
@@ -36,7 +36,7 @@ test('starts a proxy server and karma server and it works', async (t) => {
       });
 
   const responseText = (await request(upstreamProxyServer)
-                            .get('/base/lib/test/koa-karma-proxy.test.js'))
+                            .get('/base/lib/test/karma-proxy.test.js'))
                            .text;
 
   stopper.stop({port: karmaPort}, () => {

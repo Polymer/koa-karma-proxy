@@ -2,9 +2,9 @@
   "name": "koa-karma-proxy",
   "version": "1.0.0-pre.1",
   "description": "Simplified coordination of karma and upstream proxy server using the koa web framework.",
-  "main": "lib/koa-karma-proxy.js",
+  "main": "lib/karma-proxy.js",
   "bin": {
-    "karma-proxy": "lib/koa-karma-proxy-cli.js"
+    "karma-proxy": "lib/cli.js"
   },
   "files": [
     "lib/*",
@@ -17,7 +17,7 @@
     "depcheck": "depcheck --ignore-dirs=lib --ignores=\"jasmine-core,karma-jasmine,karma-tap,karma-chrome-launcher,koa,rimraf,source-map-support,@types/*\"",
     "format": "find src -name \"*.ts\" | xargs clang-format --style=file -i",
     "lint": "tslint -p . --fix",
-    "test:browser": "node lib/koa-karma-proxy-cli.js run --proxyFile ./test/karma.proxy.js ./test/karma.conf.js --single-run --browsers Chrome",
+    "test:browser": "node lib/cli.js run --proxyFile ./test/karma.proxy.js ./test/karma.conf.js --single-run --browsers Chrome",
     "test:unit": "npm run test:unit:raw --silent | tap-diff",
     "test:unit:raw": "tape -r source-map-support/register 'lib/test/*.test.js' 'lib/test/**/*.test.js'",
     "test": "npm run test:unit"
