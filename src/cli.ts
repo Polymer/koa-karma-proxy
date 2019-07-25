@@ -15,21 +15,27 @@
 import {start} from './karma-proxy';
 import karma = require('karma');
 import {resolve} from 'path';
+import {statSync} from 'fs';
 
-console.log('koa-karma-proxy wrapper');
+console.log('Karma Proxy wrapper for Karma CLI');
+
 let a = 0;
 let karmaProxyConfigFile = './karma.proxy.js';
+let usedProxyFileArg = false;
 let upstreamProxyServerFactory;
 
 while (a < process.argv.length) {
-  if (process.argv[a] === '--proxyFile') {
+  const arg = process.argv[a];
+  if (arg === '--proxyFile') {
     karmaProxyConfigFile = process.argv[a + 1];
     process.argv.splice(a, 2);
+    usedProxyFileArg = true;
     break;
   }
-  if (process.argv[a].startsWith('--proxyFile=')) {
+  if (arg.startsWith('--proxyFile=')) {
     karmaProxyConfigFile = process.argv[a].split('=').slice(1).join('=');
     process.argv.splice(a, 1);
+    usedProxyFileArg = true;
     break;
   }
   ++a;
@@ -37,13 +43,35 @@ while (a < process.argv.length) {
 
 const {process: processKarmaArgs} = require('karma/lib/cli');
 const karmaConfig: karma.ConfigOptions = processKarmaArgs();
+const showProxyFileArgumentInfo = () => console.info(
+    `You can specify an alternative to the karma.proxy.js default path to proxy config fie by using --proxyFile <path>`);
 
 karmaProxyConfigFile = resolve(karmaProxyConfigFile);
+let configFileStat;
+try {
+  configFileStat = statSync(karmaProxyConfigFile);
+} catch (e) {
+}
+
+if (!configFileStat || !configFileStat.isFile()) {
+  console.error(`No karma proxy module file found at ${karmaProxyConfigFile}`);
+  if (!usedProxyFileArg) {
+    showProxyFileArgumentInfo();
+  }
+  process.exit(1);
+}
+
 try {
   upstreamProxyServerFactory = require(karmaProxyConfigFile);
 } catch (e) {
+}
+
+if (!upstreamProxyServerFactory) {
   console.error(
       `Unable to load proxy server config file "${karmaProxyConfigFile}"`);
+  if (!usedProxyFileArg) {
+    showProxyFileArgumentInfo();
+  }
   process.exit(1);
 }
 
