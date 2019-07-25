@@ -25,7 +25,7 @@ import karma = require('karma');
 import Koa from 'koa';
 import portfinder = require('portfinder');
 const proxy = require('koa-proxy');
-import {Server} from 'http';
+import {createServer, Server} from 'http';
 
 export type UpstreamProxyServerFactory =
     (karmaProxyMiddleware: Koa.Middleware) => Koa;
@@ -47,7 +47,8 @@ interface ConfigFile {
 }
 
 export type Options = {
-  karmaConfig?: karma.ConfigOptions|ConfigFile
+  karmaConfig?: karma.ConfigOptions|ConfigFile,
+  karmaExitCallback?: (exitCode: number) => void,
 };
 
 export type Servers = {
@@ -57,121 +58,109 @@ export type Servers = {
   karmaPort: number,
 };
 
-export const start =
-    (upstreamProxyServerFactory: UpstreamProxyServerFactory,
-     options?: Options): Promise<Servers> => {
-      let resolvePromisedServers: (servers: Servers) => void;
-      let rejectPromisedServers: (err: Error) => void;
-      const promisedServers: Promise<Servers> =
-          new Promise((resolve, reject) => {
-            resolvePromisedServers = resolve;
-            rejectPromisedServers = reject;
-          });
-      const karmaConfig: ConfigOptions =
-          options && options.karmaConfig as karma.ConfigOptions || {};
-      const karmaConfigFile: ConfigFile = karmaConfig as ConfigFile;
-      if (karmaConfigFile.configFile) {
-        const {configFile} = karmaConfigFile;
-        // delete karmaConfigFile.configFile;
-        const configSetter = karma.config.parseConfig(configFile, karmaConfig);
-        configSetter.set(karmaConfig);
-      }
+export const start = async(
+    upstreamProxyServerFactory: UpstreamProxyServerFactory,
+    options?: Options): Promise<Servers> => new Promise((resolve, reject) => {
+  const karmaConfig: ConfigOptions =
+      options && options.karmaConfig as karma.ConfigOptions || {};
+  const karmaConfigFile: ConfigFile = karmaConfig as ConfigFile;
+  if (karmaConfigFile.configFile) {
+    const {configFile} = karmaConfigFile;
+    const configSetter = karma.config.parseConfig(configFile, karmaConfig);
+    configSetter.set(karmaConfig);
+  }
 
-      // Karma's default upstreamProxy server port setting is 9875.  We'll start
-      // looking for ports based on what's in the karma config for
-      // upstreamProxy, but that's just a starting point.  `portfinder` will
-      // settle on the first available one in ascending order, starting with
-      // that one.
-      const port =
-          karmaConfig.upstreamProxy && karmaConfig.upstreamProxy.port || 9875;
+  const karmaExitCallback: ((exitCode: number) => void)|undefined =
+      options && options.karmaExitCallback;
 
-      let upstreamProxyServer: Server;
-      let retryLimit: number = 10;
-      let retryDelay: number = 100;
-      const retryDelayMultiplier: number = 1 + Math.random();
+  // Record the port that we used the last time we try to bind to it, so we
+  // don't try that one on subsequent attempts.
+  let lastUpstreamProxyPortTried: number;
 
-      const retryStartUpstreamProxyServer = () => {
-        --retryLimit;
-        retryDelay = retryDelay * retryDelayMultiplier;
-        startUpstreamProxyServer();
-      };
+  // There are a couple of places where we may run into errors that are related
+  // to a chosen upstream port becoming unavailable when we try to bind to it.
+  // Whenever the error is related to the port, we'll retry starting the server.
+  // Otherwise, we'll reject the promise with the error encountered.
+  const retryOrReject = (port: number, err: Error) => {
+    const {code} = err as Error & {code: string};
+    if (code === 'EADDRINUSE' || code === 'EACCES') {
+      return startUpstreamProxyServer(port + 1);
+    } else {
+      return reject(err);
+    }
+  };
 
-      const startUpstreamProxyServer = () => {
-        portfinder.getPort({port}, (err: Error, upstreamProxyPort: number) => {
+  // Start with a placeholder middleware we can swap out once
+  // karma has started and we know its port.
+  let karmaProxyMiddleware = async (_ctx: unknown, _next: unknown) => {};
+
+  // Get the upstreamProxyServer from the factory function,
+  // yielding a wrapper that delegates to the karmaProxyMiddleware variable.
+  const upstreamProxyServer =
+      createServer(upstreamProxyServerFactory((ctx: unknown, next: unknown) => {
+                     karmaProxyMiddleware(ctx, next);
+                   }).callback());
+  upstreamProxyServer.on(
+      'error', (err: Error) => retryOrReject(lastUpstreamProxyPortTried, err));
+  upstreamProxyServer.on('listening', (upstreamProxyPort: number) => {
+    startKarmaServer(upstreamProxyPort);
+  });
+
+  const startUpstreamProxyServer = (startingPort: number) => {
+    portfinder.getPort(
+        {port: startingPort}, (err: Error, upstreamProxyPort: number) => {
           if (err) {
-            if (retryLimit > 0) {
-              return retryStartUpstreamProxyServer();
-            } else {
-              return rejectPromisedServers(err);
-            }
+            return retryOrReject(startingPort, err);
           }
-
           try {
-            // Start with a placeholder middleware we can swap out once
-            // karma has started and we know its port.
-            let karmaProxyMiddleware =
-                async (_ctx: unknown, _next: unknown) => {};
-
-            // Get the upstreamProxyServer from the factory function,
-            // yielding a wrapper that delegates to the
-            // karmaProxyMiddleware variable, then start it up on the
-            // available port we found.
-            upstreamProxyServer = upstreamProxyServerFactory(
-                                      (ctx: unknown, next: unknown) =>
-                                          karmaProxyMiddleware(ctx, next))
-                                      .listen(upstreamProxyPort);
-
-            // Maybe this is overkill.  Just wanted to be a good citizen
-            // and close the server explicitly so server doesn't hang on
-            // shutdown or keep port reserved.
-            process.on('SIGINT', () => upstreamProxyServer.close());
-
-            if (!karmaConfig.upstreamProxy) {
-              karmaConfig.upstreamProxy = {};
-            }
-
-            // This bit is important when starting the karma server
-            // because if it is opening browsers, it needs to open them
-            // on the upstream port instead of the default karma server
-            // port.
-            karmaConfig.upstreamProxy.port = upstreamProxyPort;
-
-            const karmaServer = new karma.Server(
-                karmaConfig, (exitCode: number) => process.exit(exitCode));
-
-            // When karma announces that it is listening, it has bound
-            // to a port and we will replace the variable
-            // `karmaProxyMiddleware` with an actual proxy middleware
-            // that points to the karma server.  Because the closure of
-            // the function parameter for the`upstreamProxyServerFactory`
-            // references this variable by name, it will begin calling
-            // into this newly defined proxy middleware instead of the
-            // placeholder.
-            karmaServer.on('listening', (karmaPort: number) => {
-              const karmaHostname = karmaConfig.hostname || 'localhost';
-              const karmaProtocol = karmaConfig.protocol || 'http:';
-              karmaProxyMiddleware = proxy(
-                  {host: `${karmaProtocol}//${karmaHostname}:${karmaPort}/`});
-
-              resolvePromisedServers({
-                upstreamProxyPort,
-                upstreamProxyServer,
-                karmaPort,
-                karmaServer
-              });
-            });
-
-            karmaServer.start();
+            lastUpstreamProxyPortTried = upstreamProxyPort;
+            upstreamProxyServer.listen(upstreamProxyPort);
           } catch (err) {
-            if (retryLimit > 0) {
-              return startUpstreamProxyServer();
-            } else {
-              return rejectPromisedServers(err);
-            }
+            return retryOrReject(upstreamProxyPort, err);
           }
         });
-      };
+  };
 
-      startUpstreamProxyServer();
-      return promisedServers;
-    };
+  const startKarmaServer = (upstreamProxyPort: number) => {
+    if (!karmaConfig.upstreamProxy) {
+      karmaConfig.upstreamProxy = {};
+    }
+
+    // This bit is important when starting the karma server
+    // because if it is opening browsers, it needs to open them
+    // on the upstream port instead of the default karma server
+    // port.
+    karmaConfig.upstreamProxy.port = upstreamProxyPort;
+
+    // TODO(usergenic): Remove this process.exit or make configurable.
+    const karmaServer = new karma.Server(karmaConfig, karmaExitCallback);
+
+    // When karma announces that it is listening, it has bound
+    // to a port and we will replace the variable
+    // `karmaProxyMiddleware` with an actual proxy middleware
+    // that points to the karma server.  Because the closure of
+    // the function parameter for the`upstreamProxyServerFactory`
+    // references this variable by name, it will begin calling
+    // into this newly defined proxy middleware instead of the
+    // placeholder.
+    karmaServer.on('listening', (karmaPort: number) => {
+      const karmaHostname = karmaConfig.hostname || 'localhost';
+      const karmaProtocol = karmaConfig.protocol || 'http:';
+      karmaProxyMiddleware =
+          proxy({host: `${karmaProtocol}//${karmaHostname}:${karmaPort}/`});
+
+      resolve({upstreamProxyPort, upstreamProxyServer, karmaPort, karmaServer});
+    });
+
+    karmaServer.start();
+    karmaServer.on('close', () => upstreamProxyServer.close());
+  };
+
+  // Karma's default upstreamProxy server port setting is 9875.  We'll start
+  // looking for ports based on the port specified in the karma config for
+  // upstreamProxy, but that's just a starting point.  `portfinder` will
+  // settle on the first available one in ascending order, starting with
+  // that one.
+  startUpstreamProxyServer(
+      karmaConfig.upstreamProxy && karmaConfig.upstreamProxy.port || 9875);
+});

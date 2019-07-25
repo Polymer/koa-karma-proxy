@@ -44,7 +44,8 @@ while (a < process.argv.length) {
 const {process: processKarmaArgs} = require('karma/lib/cli');
 const karmaConfig: karma.ConfigOptions = processKarmaArgs();
 const showProxyFileArgumentInfo = () => console.info(
-    `You can specify an alternative to the karma.proxy.js default path to proxy config fie by using --proxyFile <path>`);
+    `You can override the default proxy config file path of "./karma.proxy.js" by adding the option:\n` +
+    `${process.argv[1]} ${process.argv[2]} --proxyFile <path>\n`);
 
 karmaProxyConfigFile = resolve(karmaProxyConfigFile);
 let configFileStat;
@@ -76,8 +77,10 @@ if (!upstreamProxyServerFactory) {
 }
 
 (async () => {
-  const {upstreamProxyPort} =
-      await start(upstreamProxyServerFactory, {karmaConfig});
+  const {upstreamProxyPort} = await start(upstreamProxyServerFactory, {
+    karmaConfig,
+    karmaExitCallback: (exitCode: number) => process.exit(exitCode)
+  });
   console.log(
       `[karma-proxy] Upstream Proxy Server started at ` +
       `http://0.0.0.0:${upstreamProxyPort}/`);

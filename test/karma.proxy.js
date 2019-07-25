@@ -43,10 +43,12 @@ const getAsString = async (value) => {
 const isStream = (value) => value !== null && typeof value === 'object' &&
     typeof value.pipe === 'function';
 
-module.exports = (karma) => new Koa()
-                                .use(mount(
-                                    '/base',
-                                    new Koa()
-                                        .use(smileyHeaderMiddleware)
-                                        .use(staticFiles(resolve(__dirname)))))
-                                .use(karma);
+module.exports = (karma) => {
+  return new Koa()
+    .use(mount(
+      '/base',
+      new Koa()
+        .use(smileyHeaderMiddleware)
+        .use(staticFiles(resolve(__dirname)))))
+    .use(karma);
+};

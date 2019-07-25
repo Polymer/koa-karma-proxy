@@ -12,37 +12,36 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
+// import {stopper} from 'karma';
 import {stopper} from 'karma';
 import * as path from 'path';
 import request from 'supertest';
 import test from 'tape';
-import Koa = require('koa');
+
 import {start} from '../karma-proxy';
 
-const testMiddleware: Koa.Middleware =
-    async (ctx: Koa.Context, next: Function) => {
-  await next();
-  ctx.body = `${ctx.body} // :)`;
-};
+const upstreamProxyServerFactory = require('../../test/karma.proxy.js');
 
 test('starts a proxy server and karma server and it works', async (t) => {
-  t.plan(1);
-  const {karmaPort, upstreamProxyServer} = await start(
-      (karma: Koa.Middleware) => new Koa().use(testMiddleware).use(karma), {
+  t.plan(2);
+  const {karmaPort, upstreamProxyServer} =
+      await start(upstreamProxyServerFactory, {
         karmaConfig: {
           basePath: path.join(__dirname, '../..'),
-          files: [{pattern: 'lib/**/*.js', included: false}]
+          files: [{pattern: './test/*.js', included: false, served: true}]
         }
       });
 
-  const responseText = (await request(upstreamProxyServer)
-                            .get('/base/lib/test/karma-proxy.test.js'))
-                           .text;
+  const responseText =
+      (await request(upstreamProxyServer).get('/base/example.js')).text;
 
-  stopper.stop({port: karmaPort}, () => {
-    upstreamProxyServer.close();
-    t.assert(
-        responseText.trim().endsWith('// :)'),
-        `Response text should contain the appended content`);
+  upstreamProxyServer.close(() => {
+    stopper.stop({port: karmaPort}, () => {
+      t.isNotEqual(responseText, undefined, `Response text should be defined`);
+      t.equal(
+          responseText,
+          '/* :) */something();\n',
+          `Response text should contain the prepended content`);
+    });
   });
 });
