@@ -97,13 +97,14 @@ export const start = async(
   // Get the upstreamProxyServer from the factory function,
   // yielding a wrapper that delegates to the karmaProxyMiddleware variable.
   const upstreamProxyServer =
-      createServer(upstreamProxyServerFactory((ctx: unknown, next: unknown) => {
-                     karmaProxyMiddleware(ctx, next);
-                   }).callback());
+      createServer(upstreamProxyServerFactory(
+                       async (ctx: unknown, next: unknown) =>
+                           await karmaProxyMiddleware(ctx, next))
+                       .callback());
   upstreamProxyServer.on(
       'error', (err: Error) => retryOrReject(lastUpstreamProxyPortTried, err));
-  upstreamProxyServer.on('listening', (upstreamProxyPort: number) => {
-    startKarmaServer(upstreamProxyPort);
+  upstreamProxyServer.on('listening', () => {
+    startKarmaServer(lastUpstreamProxyPortTried);
   });
 
   const startUpstreamProxyServer = (startingPort: number) => {
@@ -132,7 +133,6 @@ export const start = async(
     // port.
     karmaConfig.upstreamProxy.port = upstreamProxyPort;
 
-    // TODO(usergenic): Remove this process.exit or make configurable.
     const karmaServer = new karma.Server(karmaConfig, karmaExitCallback);
 
     // When karma announces that it is listening, it has bound
@@ -148,7 +148,6 @@ export const start = async(
       const karmaProtocol = karmaConfig.protocol || 'http:';
       karmaProxyMiddleware =
           proxy({host: `${karmaProtocol}//${karmaHostname}:${karmaPort}/`});
-
       resolve({upstreamProxyPort, upstreamProxyServer, karmaPort, karmaServer});
     });
 
