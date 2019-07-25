@@ -12,6 +12,23 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
+/**
+ * This file is loaded by the karma-proxy cli and it defines a simple
+ * proxy server which mounts some middleware under the '/base' path
+ * to serve up static files from the current "./test" directory and
+ * prepends a smiley face to each one in a comment.  Anything outside
+ * the "/base" path in the URL is proxied to karma.
+ */
+module.exports = (karma) => {
+  return new Koa()
+    .use(mount(
+      '/base',
+      new Koa()
+        .use(smileyHeaderMiddleware)
+        .use(staticFiles(resolve(__dirname)))))
+    .use(karma);
+};
+ 
 const {resolve} = require('path');
 const Koa = require('koa');
 const mount = require('koa-mount');
@@ -43,12 +60,3 @@ const getAsString = async (value) => {
 const isStream = (value) => value !== null && typeof value === 'object' &&
     typeof value.pipe === 'function';
 
-module.exports = (karma) => {
-  return new Koa()
-    .use(mount(
-      '/base',
-      new Koa()
-        .use(smileyHeaderMiddleware)
-        .use(staticFiles(resolve(__dirname)))))
-    .use(karma);
-};

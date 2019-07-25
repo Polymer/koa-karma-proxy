@@ -12,7 +12,6 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-// import {stopper} from 'karma';
 import {stopper} from 'karma';
 import * as path from 'path';
 import request from 'supertest';
