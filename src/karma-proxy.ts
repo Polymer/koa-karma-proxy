@@ -58,7 +58,7 @@ export type Servers = {
 };
 
 export const start =
-    (upsFactory: UpstreamProxyServerFactory,
+    (upstreamProxyServerFactory: UpstreamProxyServerFactory,
      options?: Options): Promise<Servers> => {
       let resolvePromisedServers: (servers: Servers) => void;
       let rejectPromisedServers: (err: Error) => void;
@@ -76,6 +76,7 @@ export const start =
         const configSetter = karma.config.parseConfig(configFile, karmaConfig);
         configSetter.set(karmaConfig);
       }
+
       // Karma's default upstreamProxy server port setting is 9875.  We'll start
       // looking for ports based on what's in the karma config for
       // upstreamProxy, but that's just a starting point.  `portfinder` will
@@ -115,7 +116,7 @@ export const start =
             // yielding a wrapper that delegates to the
             // karmaProxyMiddleware variable, then start it up on the
             // available port we found.
-            upstreamProxyServer = upsFactory(
+            upstreamProxyServer = upstreamProxyServerFactory(
                                       (ctx: unknown, next: unknown) =>
                                           karmaProxyMiddleware(ctx, next))
                                       .listen(upstreamProxyPort);
@@ -142,7 +143,7 @@ export const start =
             // to a port and we will replace the variable
             // `karmaProxyMiddleware` with an actual proxy middleware
             // that points to the karma server.  Because the closure of
-            // the function parameter given to the `upsFactory`
+            // the function parameter for the`upstreamProxyServerFactory`
             // references this variable by name, it will begin calling
             // into this newly defined proxy middleware instead of the
             // placeholder.
