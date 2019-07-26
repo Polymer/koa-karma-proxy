@@ -51,9 +51,15 @@ This will:
 4. wait for karma to confirm the port it is listening on.
 5. configure the proxy middleware to start directing requests to karma.
 
+If you want to name your `karma.proxy.js` file differently or put it somewhere else, use the `--proxyFile` command-line argument to specify it like:
+
+```sh
+$ npx karma-proxy start --proxyFile ./lib/my-proxy.js
+```
+
 ## Advanced Usage
 
-You don't have to use `koa-karma-proxy` as an executable from the command-line.  It exposes everything you need to leverage within your own code:
+You don't have to use `karma-proxy` as an executable from the command-line.  It exposes everything you need to leverage within your own code:
 
 ```ts
 const Koa = require('koa');
@@ -62,11 +68,16 @@ const {join} = require('path');
 const {start} = require('koa-karma-proxy');
 const {nodeResolve} = require('koa-node-resolve');
 
-start((karma) => new Koa()
-    .use(mount('/base', nodeResolve())
-    .use(karma), {
-      // Karma config options
-      configFile: join(__dirname, '../karma.conf.js'),
-      singleRun: true
-    });
+(async () => {
+  const {upstreamProxyPort, karmaPort} =
+    await start((karma) => new Koa()
+      .use(mount('/base', nodeResolve())
+      .use(karma), {
+        // Karma config options
+        configFile: join(__dirname, '../karma.conf.js'),
+        singleRun: true
+      });
+  console.log(`Upstream Port ${upstreamProxyPort}`);
+  console.log(`Karma Port ${karmaPort}`);
+})();
 ```
