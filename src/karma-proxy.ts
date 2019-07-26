@@ -27,6 +27,10 @@ import portfinder = require('portfinder');
 const proxy = require('koa-proxy');
 import {createServer, Server} from 'http';
 
+/**
+ * A function that takes a Koa middleware to proxy requests to karma
+ * server and returns a Koa application that uses the middleware.
+ */
 export type UpstreamProxyServerFactory =
     (karmaProxyMiddleware: Koa.Middleware) => Koa;
 
@@ -58,6 +62,15 @@ export type Servers = {
   karmaPort: number,
 };
 
+/**
+ * Starts up an upstream proxy server and a karma server such that their startup
+ * and shutdowns are coordinated and they know about each other's ports.
+ *
+ * @param upstreamProxyServerFactory a factory function that takes a Koa
+ *     middleware to proxy requests to karma and returns the upstream proxy
+ *     server.
+ * @param options contains karmaConfig and karmaExitCallback options.
+ */
 export const start = async(
     upstreamProxyServerFactory: UpstreamProxyServerFactory,
     options?: Options): Promise<Servers> => new Promise((resolve, reject) => {
