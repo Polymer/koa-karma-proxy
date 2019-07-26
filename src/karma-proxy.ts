@@ -46,6 +46,7 @@ interface ConfigOptions extends karma.ConfigOptions {
     protocol?: string,
   };
 }
+
 interface ConfigFile {
   configFile: string;
 }
