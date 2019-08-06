@@ -39,8 +39,6 @@ export const run =
             karmaProxyConfigFile}" due to`,
         err);
     showUsageInfo();
-    // TODO(usergenic): Maybe throw an error here and handle process exit in
-    // bin/karma-proxy.js?  Maybe...
     resolve(1);
   }
 
