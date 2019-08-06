@@ -1,0 +1,63 @@
+{
+  "name": "koa-karma-proxy",
+  "version": "1.0.0-pre.1",
+  "description": "Simplified coordination of karma and upstream proxy server using the koa web framework.",
+  "main": "lib/karma-proxy.js",
+  "bin": {
+    "karma-proxy": "lib/cli.js"
+  },
+  "files": [
+    "lib/*",
+    "!lib/test"
+  ],
+  "scripts": {
+    "build": "npm run lint && npm run format && npm run depcheck && npm run clean && npm run compile",
+    "clean": "rimraf lib",
+    "compile": "tsc",
+    "depcheck": "depcheck --ignore-dirs=lib --ignores=\"jasmine-core,karma-jasmine,karma-tap,karma-chrome-launcher,koa,rimraf,source-map-support,@types/*\"",
+    "format": "find src -name \"*.ts\" | xargs clang-format --style=file -i",
+    "lint": "tslint -p . --fix",
+    "test:browser": "node lib/cli.js run --proxyFile ./test/karma.proxy.js ./test/karma.conf.js --single-run --browsers Chrome",
+    "test:unit": "npm run test:unit:raw --silent | tap-diff",
+    "test:unit:raw": "tape -r source-map-support/register 'lib/test/*.test.js' 'lib/test/**/*.test.js'",
+    "test": "npm run test:unit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PolymerLabs/koa-karma-proxy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PolymerLabs/koa-karma-proxy/issues"
+  },
+  "homepage": "https://github.com/PolymerLabs/koa-karma-proxy",
+  "keywords": [],
+  "author": "The Polymer Project Authors",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "@types/karma": "^3.0.3",
+    "@types/koa": "^2.0.49",
+    "@types/supertest": "^2.0.8",
+    "@types/tape": "^4.2.33",
+    "clang-format": "^1.2.4",
+    "depcheck": "^0.8.3",
+    "get-stream": "^5.1.0",
+    "jasmine-core": "^3.4.0",
+    "karma-chrome-launcher": "^3.0.0",
+    "karma-jasmine": "^2.0.1",
+    "koa": "^2.7.0",
+    "koa-mount": "^4.0.0",
+    "koa-static": "^5.0.0",
+    "rimraf": "^2.6.3",
+    "source-map-support": "^0.5.12",
+    "supertest": "^4.0.2",
+    "tap-diff": "^0.1.1",
+    "tape": "^4.11.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "karma": "^4.1.0",
+    "koa-proxy": "^1.0.0-alpha.3",
+    "portfinder": "^1.0.20"
+  }
+}
