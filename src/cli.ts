@@ -12,42 +12,49 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-import {start} from './karma-proxy';
+import {Servers, start} from './karma-proxy';
+
 import karma = require('karma');
-import {resolve} from 'path';
+import {resolve as resolvePath} from 'path';
 import {extractArgv} from './utils';
 
-console.log('Karma Proxy wrapper for Karma CLI');
-let upstreamProxyServerFactory;
+export const run = async(
+    argv: Array<string>): Promise<Servers> => new Promise((resolve, reject) => {
+  console.log('Karma Proxy wrapper for Karma CLI');
+  let upstreamProxyServerFactory;
 
-const karmaProxyConfigFile =
-    resolve(extractArgv('--proxyFile', process.argv) || './karma.proxy.js');
+  const karmaProxyConfigFile =
+      resolvePath(extractArgv('--proxyFile', argv) || './karma.proxy.js');
 
-const {process: processKarmaArgs} = require('karma/lib/cli');
-const karmaConfig: karma.ConfigOptions = processKarmaArgs();
-const showUsageInfo = () => console.info(
-    `You can override the default proxy config file path of "./karma.proxy.js" by adding the option:\n` +
-    `${process.argv[1]} ${process.argv[2]} --proxyFile <path>\n`);
+  const {process: processKarmaArgs} = require('karma/lib/cli');
+  const karmaConfig: karma.ConfigOptions = processKarmaArgs();
+  const showUsageInfo = () => console.info(
+      `You can override the default proxy config file path of "./karma.proxy.js" by adding the option:\n` +
+      `${argv[1]} ${argv[2]} --proxyFile <path>\n`);
 
-try {
-  upstreamProxyServerFactory = require(karmaProxyConfigFile);
-} catch (err) {
-  console.error(
-      `Unable to load proxy server config file "${
-          karmaProxyConfigFile}" due to`,
-      err);
-  showUsageInfo();
-  process.exit(1);
-}
+  try {
+    upstreamProxyServerFactory = require(karmaProxyConfigFile);
+  } catch (err) {
+    console.error(
+        `Unable to load proxy server config file "${
+            karmaProxyConfigFile}" due to`,
+        err);
+    showUsageInfo();
+    // TODO(usergenic): Maybe throw an error here and handle process exit in
+    // bin/karma-proxy.js?  Maybe...
+    reject(1);
+  }
 
-(async () => {
-  const {upstreamProxyPort, karmaPort} =
-      await start(upstreamProxyServerFactory, {
-        karmaConfig,
-        karmaExitCallback: (exitCode: number) => process.exit(exitCode)
-      });
-  console.log(
-      `[karma-proxy] Upstream Proxy Server started at ` +
-      `http://0.0.0.0:${upstreamProxyPort}/ and proxying to karma port ${
-          karmaPort}`);
-})();
+  (async () => {
+    const servers = await start(upstreamProxyServerFactory, {
+      karmaConfig,
+      karmaExitCallback: (exitCode: number) => reject(exitCode)
+    });
+    console.log(
+        `[karma-proxy] Upstream Proxy Server started at ` +
+        `http://0.0.0.0:${
+            servers.upstreamProxyPort}/ and proxying to karma port ${
+            servers.karmaPort}`);
+    resolve(servers);
+  })();
+});

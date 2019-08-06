@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- ## Unreleased -->
 <!-- Add new unreleased items here -->
 
+## [1.0.0-pre.3] - 2019-08-06
+
+ - Fixed the karma-proxy CLI; was missing shebang directive.
+
 ## [1.0.0-pre.2] - 2019-08-06
 
 - Initial release.
