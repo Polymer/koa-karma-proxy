@@ -15,6 +15,4 @@
  */
 
 const {run} = require('../lib/cli.js');
-run(process.argv)
-    .then((exitCode) => process.exit(exitCode))
-    .catch((exitCode) => process.exit(exitCode));
+run(process.argv).then((exitCode) => process.exit(exitCode));
