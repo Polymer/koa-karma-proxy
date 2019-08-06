@@ -13,7 +13,6 @@
  */
 
 import {start} from './karma-proxy';
-
 import karma = require('karma');
 import {resolve as resolvePath} from 'path';
 import {extractArgv} from './utils';
