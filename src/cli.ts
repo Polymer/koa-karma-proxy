@@ -12,14 +12,14 @@
  * http://polymer.github.io/PATENTS.txt
  */
 
-import {Servers, start} from './karma-proxy';
+import {start} from './karma-proxy';
 
 import karma = require('karma');
 import {resolve as resolvePath} from 'path';
 import {extractArgv} from './utils';
 
-export const run = async(
-    argv: Array<string>): Promise<Servers> => new Promise((resolve, reject) => {
+export const run =
+    async(argv: Array<string>): Promise<number> => new Promise((resolve) => {
   console.log('Karma Proxy wrapper for Karma CLI');
   let upstreamProxyServerFactory;
 
@@ -42,19 +42,15 @@ export const run = async(
     showUsageInfo();
     // TODO(usergenic): Maybe throw an error here and handle process exit in
     // bin/karma-proxy.js?  Maybe...
-    reject(1);
+    resolve(1);
   }
 
   (async () => {
-    const servers = await start(upstreamProxyServerFactory, {
-      karmaConfig,
-      karmaExitCallback: (exitCode: number) => reject(exitCode)
-    });
+    const {upstreamProxyPort, karmaPort} = await start(
+        upstreamProxyServerFactory, {karmaConfig, karmaExitCallback: resolve});
     console.log(
         `[karma-proxy] Upstream Proxy Server started at ` +
-        `http://0.0.0.0:${
-            servers.upstreamProxyPort}/ and proxying to karma port ${
-            servers.karmaPort}`);
-    resolve(servers);
+        `http://0.0.0.0:${upstreamProxyPort}/ and proxying to karma port ${
+            karmaPort}`);
   })();
 });
