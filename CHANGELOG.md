@@ -12,3 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- ## Unreleased -->
 <!-- Add new unreleased items here -->
+
+## [1.0.0-pre.2] - 2019-08-06
+
+- Initial release.
