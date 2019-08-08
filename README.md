@@ -56,8 +56,9 @@ The wrapper supports two optional flags in addition to all the ones in the stand
  - `--proxyFile` to point to a file other than `karma.proxy.js`.
  - `--proxyPort` to specify a starting port other than the default `9876` to start the upstream proxy server on.
 
+Please note, when using `npx`, flags given to `karma-proxy` should follow a `--` separator so they are not treated as `npx` flags:
 ```sh
-$ npx karma-proxy start --proxyFile ./lib/my-proxy.js --proxyPort 30330
+$ npx karma-proxy start -- --proxyFile ./lib/my-proxy.js --proxyPort 30330
 ```
 
 ## Advanced Usage
