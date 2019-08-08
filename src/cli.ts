@@ -17,8 +17,7 @@ import karma = require('karma');
 import {resolve as resolvePath} from 'path';
 import {extractArgv} from './utils';
 
-export const run =
-    async(argv: Array<string>): Promise<number> => new Promise((resolve) => {
+export const run = (argv: string[]) => new Promise<number>((resolve) => {
   console.log('Karma Proxy wrapper for Karma CLI');
   let upstreamProxyServerFactory;
 
@@ -31,10 +30,12 @@ export const run =
   })();
 
   const {process: processKarmaArgs} = require('karma/lib/cli');
+
+  console.info(
+      `  --proxyFile <path>   Default is ./karma.proxy.js\n` +
+      `  --proxyPort <port>   Default is 9876\n`);
+
   const karmaConfig: karma.ConfigOptions = processKarmaArgs();
-  const showUsageInfo = () => console.info(
-      `You can override the default proxy config file path of "./karma.proxy.js" by adding the option:\n` +
-      `${argv[1]} ${argv[2]} --proxyFile <path>\n`);
 
   try {
     upstreamProxyServerFactory = require(karmaProxyConfigFile);
@@ -43,7 +44,6 @@ export const run =
         `Unable to load proxy server config file "${
             karmaProxyConfigFile}" due to`,
         err);
-    showUsageInfo();
     resolve(1);
   }
 
@@ -52,7 +52,7 @@ export const run =
         await start(upstreamProxyServerFactory, {
           upstreamProxyPort: proxyPortOption,
           karmaConfig,
-          karmaExitCallback: resolve
+          karmaExitCallback: resolve,
         });
     console.log(
         `[karma-proxy] Upstream Proxy Server started at ` +
