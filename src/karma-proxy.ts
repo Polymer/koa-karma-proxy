@@ -54,6 +54,7 @@ interface ConfigFile {
 export type Options = {
   karmaConfig?: karma.ConfigOptions|ConfigFile,
   karmaExitCallback?: (exitCode: number) => void,
+  upstreamProxyPort?: number,
 };
 
 export type Servers = {
@@ -78,6 +79,8 @@ export const start = async(
   const karmaConfig: ConfigOptions =
       options && options.karmaConfig as karma.ConfigOptions || {};
   const karmaConfigFile: ConfigFile = karmaConfig as ConfigFile;
+  const startingUpstreamProxyPort: number =
+      options && options.upstreamProxyPort || 9876;
   if (karmaConfigFile.configFile) {
     const {configFile} = karmaConfigFile;
     const configSetter = karma.config.parseConfig(configFile, karmaConfig);
@@ -169,11 +172,5 @@ export const start = async(
     karmaServer.on('close', () => upstreamProxyServer.close());
   };
 
-  // Karma's default upstreamProxy server port setting is 9875.  We'll start
-  // looking for ports based on the port specified in the karma config for
-  // upstreamProxy, but that's just a starting point.  `portfinder` will
-  // settle on the first available one in ascending order, starting with
-  // that one.
-  startUpstreamProxyServer(
-      karmaConfig.upstreamProxy && karmaConfig.upstreamProxy.port || 9875);
+  startUpstreamProxyServer(startingUpstreamProxyPort);
 });
