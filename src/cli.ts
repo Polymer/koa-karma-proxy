@@ -25,6 +25,11 @@ export const run =
   const karmaProxyConfigFile =
       resolvePath(extractArgv('--proxyFile', argv) || './karma.proxy.js');
 
+  const proxyPortOption: number|undefined = (() => {
+    const port = extractArgv('--proxyPort', argv);
+    return port ? parseInt(port) : undefined;
+  })();
+
   const {process: processKarmaArgs} = require('karma/lib/cli');
   const karmaConfig: karma.ConfigOptions = processKarmaArgs();
   const showUsageInfo = () => console.info(
@@ -43,8 +48,12 @@ export const run =
   }
 
   (async () => {
-    const {upstreamProxyPort, karmaPort} = await start(
-        upstreamProxyServerFactory, {karmaConfig, karmaExitCallback: resolve});
+    const {upstreamProxyPort, karmaPort} =
+        await start(upstreamProxyServerFactory, {
+          upstreamProxyPort: proxyPortOption,
+          karmaConfig,
+          karmaExitCallback: resolve
+        });
     console.log(
         `[karma-proxy] Upstream Proxy Server started at ` +
         `http://0.0.0.0:${upstreamProxyPort}/ and proxying to karma port ${

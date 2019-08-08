@@ -13,10 +13,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- ## Unreleased -->
 <!-- Add new unreleased items here -->
 
+## [1.0.0-pre.4] - 2019-08-08
+
+ - Make it possible to specify upstream proxy port through more common vectors:
+   - Add a `--proxyPort` CLI flag
+   - Add an `upstreamProxyPort` option in `start()`
+ - Default the upstream proxy port to 9876.
+
 ## [1.0.0-pre.3] - 2019-08-06
 
  - Fixed the karma-proxy CLI; was missing shebang directive.
 
 ## [1.0.0-pre.2] - 2019-08-06
 
-- Initial release.
+ - Initial release.
