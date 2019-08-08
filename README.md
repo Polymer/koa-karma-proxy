@@ -51,7 +51,7 @@ This will:
 4. wait for karma to confirm the port it is listening on.
 5. configure the proxy middleware to start directing requests to karma.
 
-The wrapper supports two optional flags:
+The wrapper supports two optional flags in addition to all the ones in the standard `karma` CLI:
 
  - `--proxyFile` to point to a file other than `karma.proxy.js`.
  - `--proxyPort` to specify a starting port other than the default `9876` to start the upstream proxy server on.
