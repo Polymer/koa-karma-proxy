@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    Unreleased section, uncommenting the header as necessary.
 -->
 
-<!-- ## Unreleased -->
+## Unreleased 
+
+ - Added a `--proxyHost` CLI flag
+ - Added an `upstreamProxyHost` option in `start()`
+
 <!-- Add new unreleased items here -->
 
 ## [1.0.0-pre.4] - 2019-08-08

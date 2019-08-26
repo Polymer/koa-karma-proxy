@@ -28,7 +28,34 @@ test('starts a proxy server and karma server and it works', async (t) => {
         karmaConfig: {
           basePath: path.join(__dirname, '../..'),
           files: [{pattern: './test/*.js', included: false, served: true}]
-        }
+        },
+        karmaExitCallback: () => undefined,
+      });
+
+  const responseText =
+      (await request(upstreamProxyServer).get('/base/example.js')).text;
+
+  upstreamProxyServer.close(() => {
+    stopper.stop({port: karmaPort}, () => {
+      t.isNotEqual(responseText, undefined, `Response text should be defined`);
+      t.equal(
+          responseText,
+          '/* :) */something();\n',
+          `Response text should contain the prepended content`);
+    });
+  });
+});
+
+test('starts a proxy server on the given host', async (t) => {
+  t.plan(2);
+  const {karmaPort, upstreamProxyServer} =
+      await start(upstreamProxyServerFactory, {
+        karmaConfig: {
+          basePath: path.join(__dirname, '../..'),
+          files: [{pattern: './test/*.js', included: false, served: true}],
+        },
+        upstreamProxyHost: '0.0.0.0',
+        karmaExitCallback: () => undefined,
       });
 
   const responseText =

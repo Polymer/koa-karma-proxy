@@ -54,6 +54,7 @@ interface ConfigFile {
 export type Options = {
   karmaConfig?: karma.ConfigOptions|ConfigFile,
   karmaExitCallback?: (exitCode: number) => void,
+  upstreamProxyHost?: string,
   upstreamProxyPort?: number,
 };
 
@@ -81,6 +82,8 @@ export const start = async(
   const karmaConfigFile: ConfigFile = karmaConfig as ConfigFile;
   const startingUpstreamProxyPort: number =
       options && options.upstreamProxyPort || 9876;
+  const upstreamProxyHost: string =
+      options && options.upstreamProxyHost || 'localhost';
   if (karmaConfigFile.configFile) {
     const {configFile} = karmaConfigFile;
     const configSetter = karma.config.parseConfig(configFile, karmaConfig);
@@ -132,7 +135,7 @@ export const start = async(
           }
           try {
             lastUpstreamProxyPortTried = upstreamProxyPort;
-            upstreamProxyServer.listen(upstreamProxyPort);
+            upstreamProxyServer.listen(upstreamProxyPort, upstreamProxyHost);
           } catch (err) {
             return retryOrReject(upstreamProxyPort, err);
           }
