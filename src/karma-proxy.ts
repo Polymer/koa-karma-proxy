@@ -53,16 +53,19 @@ interface ConfigFile {
 export type Options = {
   karmaConfig?: karma.ConfigOptions|ConfigFile,
   karmaExitCallback?: (exitCode: number) => void,
-  upstreamProxyHost?: string,
+  upstreamProxyAddress?: string,
+  upstreamProxyHostname?: string,
   upstreamProxyPort?: number,
 };
 
 export type Servers = {
+  upstreamProxyAddress: string,
   upstreamProxyServer: Server,
-  upstreamProxyHost: string,
+  upstreamProxyHostname: string,
   upstreamProxyPort: number,
   karmaServer: karma.Server,
-  karmaHost: string,
+  karmaAddress: string,
+  karmaHostname: string,
   karmaPort: number,
 };
 
@@ -78,20 +81,21 @@ export type Servers = {
 export const start = async(
     upstreamProxyServerFactory: UpstreamProxyServerFactory,
     options?: Options): Promise<Servers> => new Promise((resolve, reject) => {
-  const karmaConfig: ConfigOptions = options &&
-          options.karmaConfig as karma.ConfigOptions &
-              {listenAddress?: string} ||
-      {};
+  const karmaConfig: Partial<ConfigOptions&{listenAddress: string}&ConfigFile> =
+      options && options.karmaConfig || {};
   const karmaConfigFile: ConfigFile = karmaConfig as ConfigFile;
   const startingUpstreamProxyPort: number =
       options && options.upstreamProxyPort || 9876;
   const maxUpstreamProxyPort = 65535;
-  const upstreamProxyHost: string =
-      options && options.upstreamProxyHost || 'localhost';
+  const upstreamProxyHostname: string =
+      options && options.upstreamProxyHostname || 'localhost';
+  const upstreamProxyAddress: string =
+      options && options.upstreamProxyAddress || '0.0.0.0';
   if (karmaConfigFile.configFile) {
     const {configFile} = karmaConfigFile;
-    const configSetter = karma.config.parseConfig(configFile, karmaConfig);
-    configSetter.set(karmaConfig);
+    const configSetter =
+        karma.config.parseConfig(configFile, karmaConfig as ConfigOptions);
+    configSetter.set(karmaConfig as ConfigOptions);
   }
 
   const karmaExitCallback: ((exitCode: number) => void)|undefined =
@@ -141,7 +145,8 @@ export const start = async(
       ++lastUpstreamProxyPortTried;
     }
     try {
-      upstreamProxyServer.listen(lastUpstreamProxyPortTried, upstreamProxyHost);
+      upstreamProxyServer.listen(
+          lastUpstreamProxyPortTried, upstreamProxyAddress);
     } catch (err) {
       retryOrReject(err);
     }
@@ -156,7 +161,7 @@ export const start = async(
     // because if it is opening browsers, it needs to open them
     // on the upstream host and port instead of the karma server
     // host and port.
-    karmaConfig.upstreamProxy.hostname = upstreamProxyHost;
+    karmaConfig.upstreamProxy.hostname = upstreamProxyHostname;
     karmaConfig.upstreamProxy.port = upstreamProxyPort;
 
     const karmaServer = new karma.Server(karmaConfig, karmaExitCallback);
@@ -170,15 +175,18 @@ export const start = async(
     // into this newly defined proxy middleware instead of the
     // placeholder.
     karmaServer.on('listening', (karmaPort: number) => {
-      const karmaHost = karmaConfig.hostname || 'localhost';
+      const karmaHostname = karmaConfig.hostname || 'localhost';
+      const karmaAddress = karmaConfig.listenAddress || '0.0.0.0';
       const karmaProtocol = karmaConfig.protocol || 'http:';
       karmaProxyMiddleware =
-          proxy({host: `${karmaProtocol}//${karmaHost}:${karmaPort}/`});
+          proxy({host: `${karmaProtocol}//${karmaHostname}:${karmaPort}/`});
       resolve({
-        upstreamProxyHost,
+        upstreamProxyAddress,
+        upstreamProxyHostname,
         upstreamProxyPort,
         upstreamProxyServer,
-        karmaHost,
+        karmaAddress,
+        karmaHostname,
         karmaPort,
         karmaServer
       });

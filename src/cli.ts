@@ -24,7 +24,8 @@ export const run = (argv: string[]) => new Promise<number>((resolve) => {
   const karmaProxyConfigFile =
       resolvePath(extractArgv('--proxyFile', argv) || './karma.proxy.js');
 
-  const proxyHostOption: string = extractArgv('--proxyHost', argv);
+  const proxyHostnameOption: string = extractArgv('--proxyHostname', argv);
+  const proxyAddressOption: string = extractArgv('--proxyAddress', argv);
 
   const proxyPortOption: number|undefined = (() => {
     const port = extractArgv('--proxyPort', argv);
@@ -34,11 +35,14 @@ export const run = (argv: string[]) => new Promise<number>((resolve) => {
   const {process: processKarmaArgs} = require('karma/lib/cli');
 
   console.info(
-      `  --proxyFile <path>      ${
+      `  --proxyFile     <path>      ${
           karmaProxyConfigFile || 'Default is ./karma.proxy.js'}\n` +
-      `  --proxyHost <hostname>  ${
-          proxyHostOption || 'Default is localhost'}\n` +
-      `  --proxyPort <port>      ${proxyPortOption || 'Default is 9876'}\n`);
+      `  --proxyAddress  <address>   ${
+          proxyAddressOption || 'Default is 0.0.0.0'}\n` +
+      `  --proxyHostname <hostname>  ${
+          proxyHostnameOption || 'Default is localhost'}\n` +
+      `  --proxyPort     <port>      ${
+          proxyPortOption || 'Default is 9876'}\n`);
 
   const karmaConfig: karma.ConfigOptions = processKarmaArgs();
 
@@ -53,16 +57,23 @@ export const run = (argv: string[]) => new Promise<number>((resolve) => {
   }
 
   (async () => {
-    const {upstreamProxyHost, upstreamProxyPort, karmaHost, karmaPort} =
-        await start(upstreamProxyServerFactory, {
-          upstreamProxyHost: proxyHostOption,
-          upstreamProxyPort: proxyPortOption,
-          karmaConfig,
-          karmaExitCallback: resolve,
-        });
+    const {
+      upstreamProxyAddress,
+      upstreamProxyHostname,
+      upstreamProxyPort,
+      karmaHostname,
+      karmaPort
+    } = await start(upstreamProxyServerFactory, {
+      upstreamProxyAddress: proxyAddressOption,
+      upstreamProxyHostname: proxyHostnameOption,
+      upstreamProxyPort: proxyPortOption,
+      karmaConfig,
+      karmaExitCallback: resolve,
+    });
     console.log(
         `[karma-proxy] Upstream Proxy Server started at ` +
-        `http://${upstreamProxyHost}:${upstreamProxyPort}/ ` +
-        `and proxy to karma at ${karmaHost}:${karmaPort}`);
+        `http://${upstreamProxyHostname}:${upstreamProxyPort}/ ` +
+        `(${upstreamProxyAddress}) ` +
+        `and proxy to karma at ${karmaHostname}:${karmaPort}`);
   })();
 });
