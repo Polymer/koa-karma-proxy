@@ -58,7 +58,6 @@
   },
   "dependencies": {
     "karma": "^4.1.0",
-    "koa-proxy": "^1.0.0-alpha.3",
-    "portfinder": "^1.0.20"
+    "koa-proxy": "^1.0.0-alpha.3"
   }
 }
