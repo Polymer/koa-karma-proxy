@@ -55,14 +55,14 @@ export const run = (argv: string[]) => new Promise<number>((resolve) => {
   (async () => {
     const {upstreamProxyHost, upstreamProxyPort, karmaHost, karmaPort} =
         await start(upstreamProxyServerFactory, {
+          upstreamProxyHost: proxyHostOption,
           upstreamProxyPort: proxyPortOption,
           karmaConfig,
           karmaExitCallback: resolve,
         });
     console.log(
         `[karma-proxy] Upstream Proxy Server started at ` +
-        `http://${upstreamProxyHost}:${
-            upstreamProxyPort}/ and proxy ro karma at ${karmaHost}:${
-            karmaPort}`);
+        `http://${upstreamProxyHost}:${upstreamProxyPort}/ ` +
+        `and proxy to karma at ${karmaHost}:${karmaPort}`);
   })();
 });
