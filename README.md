@@ -54,7 +54,8 @@ This will:
 The wrapper supports two optional flags in addition to all the ones in the standard `karma` CLI:
 
  - `--proxyFile` to point to a file other than `karma.proxy.js`.
- - `--proxyHost` to specify a host name/IP for the proxy to listen on other than the default `localhost`.
+ - `--proxyAddress` to specify a host name/IP for the proxy to listen on other than the default `0.0.0.0`.
+ - `--proxyHostname` to specify a host name/IP to direct browsers to other than the default `localhost`.
  - `--proxyPort` to specify a starting port other than the default `9876` to start the upstream proxy server on.
 
 Please note, when using `npx`, flags given to `karma-proxy` should follow a `--` separator so they are not treated as `npx` flags:
