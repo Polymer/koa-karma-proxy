@@ -1,6 +1,6 @@
 {
   "name": "koa-karma-proxy",
-  "version": "1.0.0-pre.4",
+  "version": "1.0.0-pre.5",
   "description": "Simplified coordination of karma and upstream proxy server using the koa web framework.",
   "main": "lib/karma-proxy.js",
   "bin": {
