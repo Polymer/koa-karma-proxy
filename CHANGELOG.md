@@ -12,8 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased 
 
- - Added a `--proxyHost` CLI flag
- - Added an `upstreamProxyHost` option in `start()`
+ - Added a `--proxyAddress` and `--proxyHostname` CLI flags
+ - Added an `upstreamProxyAddress` and `upstreamProxyHostname` options in `start()`
+ - Include `karmaAddress`, `karmaHostname`, `upstreamProxyAddress` and `upstreamProxyHostname` in `start()` async response.
 
 <!-- Add new unreleased items here -->
 
