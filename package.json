@@ -57,7 +57,7 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "karma": "^4.1.0",
+    "karma": "^6.4.3",
     "koa-proxy": "^1.0.0-alpha.3"
   }
 }
