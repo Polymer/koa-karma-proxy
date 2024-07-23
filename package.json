@@ -40,7 +40,7 @@
     "@types/supertest": "^2.0.8",
     "@types/tape": "^4.2.33",
     "clang-format": "^1.2.4",
-    "depcheck": "^0.8.3",
+    "depcheck": "^1.4.7",
     "get-stream": "^5.1.0",
     "jasmine-core": "^3.4.0",
     "karma-chrome-launcher": "^3.0.0",
